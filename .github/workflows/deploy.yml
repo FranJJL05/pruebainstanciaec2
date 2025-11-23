@@ -6,20 +6,20 @@ on:
     - develop
 
 jobs:
-  # tests:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout del código
-  #       uses: actions/checkout@v4
-  #     - name: Configurar Node.js
-  #       uses: actions/setup-node@v4
-  #     - name: Instalar dependencias
-  #       run: npm install
-  #     - name: Ejecutar Pruebas Unitarias
-  #       run: npm run test
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+      - name: Instalar dependencias
+        run: npm install
+      - name: Ejecutar Pruebas Unitarias
+        run: npm run test
         
   deploy:
-    # needs: tests
+    needs: tests
     runs-on: ubuntu-latest
     
     steps:
@@ -36,35 +36,13 @@ jobs:
 
       - name: Generar Documentación JSDoc
         run: npm run docs
-        continue-on-error: true
 
-      - name: Verificar Secrets
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      - name: Configurar clave SSH
         run: |
-          if [ -z "$EC2_HOST" ]; then
-            echo "::error::El secret EC2_HOST no está configurado en GitHub."
-            exit 1
-          fi
-          if [ -z "$EC2_SSH_KEY" ]; then
-            echo "::error::El secret EC2_SSH_KEY no está configurado en GitHub."
-            exit 1
-          fi
-          if [ -z "$EC2_USERNAME" ]; then
-            echo "::error::El secret EC2_USERNAME no está configurado en GitHub."
-            exit 1
-          fi
-          echo "Todos los secrets necesarios están presentes."
-
-      - name: Configurar directorio .ssh
-        run: mkdir -p ~/.ssh/
-
-      - name: Guardar clave privada
-        run: |
+          mkdir -p ~/.ssh/
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Preparar directorio en EC2
         run: |
@@ -72,5 +50,5 @@ jobs:
 
       - name: Despliegue de la Aplicación a EC2
         run: |
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete ./src/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete ./docs/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/docs/
+          rsync -avz --delete ./src/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/
+          rsync -avz --delete ./docs/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/docs/
