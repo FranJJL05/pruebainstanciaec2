@@ -1,0 +1,25 @@
+{
+  "name": "pruebainstanciaec2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FranJJL05/pruebainstanciaec2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FranJJL05/pruebainstanciaec2/issues"
+  },
+  "homepage": "https://github.com/FranJJL05/pruebainstanciaec2#readme",
+  "dependencies": {
+    "jest": "^30.2.0",
+    "jsdoc": "^4.0.5"
+  }
+}

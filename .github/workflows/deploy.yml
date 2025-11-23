@@ -1,0 +1,50 @@
+name: Despliegue prueba EC2
+
+on:
+  push:
+    branches: 
+    - develop
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+      - name: Instalar dependencias
+        run: npm install
+      - name: Ejecutar Pruebas Unitarias
+        run: npm run test
+        
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+        
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias para JSDoc
+        run: npm install
+
+      - name: Generar Documentación JSDoc
+        run: npm run docs
+
+      - name: Configurar clave SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Despliegue de la Aplicación a EC2
+        run: |
+          rsync -avz --delete ./src/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/
+          rsync -avz --delete ./docs/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/docs/
