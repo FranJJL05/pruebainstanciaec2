@@ -44,6 +44,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Preparar directorio en EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo mkdir -p /var/www/html/pruebainstanciaec2 && sudo chown -R \$USER:\$USER /var/www/html/pruebainstanciaec2"
+
       - name: Despliegue de la Aplicación a EC2
         run: |
           rsync -avz --delete ./src/ ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/var/www/html/pruebainstanciaec2/
