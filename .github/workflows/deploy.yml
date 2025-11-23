@@ -38,12 +38,36 @@ jobs:
         run: npm run docs
         continue-on-error: true
 
-      - name: Configurar clave SSH
+      - name: Verificar Secrets
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
         run: |
-          mkdir -p ~/.ssh/
+          if [ -z "$EC2_HOST" ]; then
+            echo "::error::El secret EC2_HOST no está configurado en GitHub."
+            exit 1
+          fi
+          if [ -z "$EC2_SSH_KEY" ]; then
+            echo "::error::El secret EC2_SSH_KEY no está configurado en GitHub."
+            exit 1
+          fi
+          if [ -z "$EC2_USERNAME" ]; then
+            echo "::error::El secret EC2_USERNAME no está configurado en GitHub."
+            exit 1
+          fi
+          echo "Todos los secrets necesarios están presentes."
+
+      - name: Configurar directorio .ssh
+        run: mkdir -p ~/.ssh/
+
+      - name: Guardar clave privada
+        run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Agregar host a known_hosts
+        run: ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       - name: Preparar directorio en EC2
         run: |
