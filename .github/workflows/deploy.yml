@@ -36,6 +36,7 @@ jobs:
 
       - name: Generar Documentación JSDoc
         run: npm run docs
+        continue-on-error: true
 
       - name: Configurar clave SSH
         run: |
